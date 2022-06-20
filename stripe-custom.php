@@ -42,6 +42,28 @@ try {
         <!-- jQuery is used only for this example; it isn't required to use Stripe -->
         <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
         <script type="text/javascript">
+
+            function __validate_card_cvv_expiry_date() {
+                $ = jQuery;
+                Stripe.setPublishableKey('pk_test_51K4vy2FXBQa8XZVzDkqkRD5fOHNgD7DzxNbcqeeAz4PTM03ujvFFDHZhxegOLiDWRkcQUMUGNBFqSV5QYUc0XFBs00jFaFFYch');
+                $('.stripe-payment-errors').html('');
+                var validCardDetails = true;
+                if (!Stripe.card.validateCardNumber($('.card-number').val())) {
+                    validCardDetails = false;
+                    $('.stripe-payment-errors').append('<p class="error-msg">Credit card number is invalid.</p>');
+                }
+                if (!Stripe.card.validateCVC($('.card-cvc').val())) {
+                    validCardDetails = false;
+                    $('.stripe-payment-errors').append('<p class="error-msg">CVC number is invalid.</p>');
+                }
+                if (!Stripe.card.validateExpiry($('.card-expiry-month').val(), $('.card-expiry-year').val())) {
+                    validCardDetails = false;
+                    $('.stripe-payment-errors').append('<p class="error-msg">Expiry date is invalid.</p>');
+                }
+                
+                return validCardDetails;
+            }
+
             // this identifies your website in the createToken call below
             Stripe.setPublishableKey('pk_test_51K4vy2FXBQa8XZVzDkqkRD5fOHNgD7DzxNbcqeeAz4PTM03ujvFFDHZhxegOLiDWRkcQUMUGNBFqSV5QYUc0XFBs00jFaFFYch');
             function stripeResponseHandler(status, response) {
@@ -65,12 +87,15 @@ try {
                     // disable the submit button to prevent repeated clicks
                     $('.submit-button').attr("disabled", "disabled");
                     // createToken returns immediately - the supplied callback submits the form if there are no errors
-                    Stripe.createToken({
-                        number: $('.card-number').val(),
-                        cvc: $('.card-cvc').val(),
-                        exp_month: $('.card-expiry-month').val(),
-                        exp_year: $('.card-expiry-year').val()
-                    }, stripeResponseHandler);
+                    if (__validate_card_cvv_expiry_date()) {
+                        Stripe.createToken({
+                            number: $('.card-number').val(),
+                            cvc: $('.card-cvc').val(),
+                            exp_month: $('.card-expiry-month').val(),
+                            exp_year: $('.card-expiry-year').val()
+                        }, stripeResponseHandler);
+
+                    }
                     return false; // submit from callback
                 });
             });
